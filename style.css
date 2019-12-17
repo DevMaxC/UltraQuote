@@ -1,0 +1,17 @@
+body {
+  overflow: hidden;
+}
+
+#tools {
+  position: absolute;
+  height: 98vh;
+  background-color: grey;
+  display: flex;
+  flex-direction: column;
+  width: 150px;
+  z-index: 1;
+}
+
+#work-area {
+  display: inline;
+}
