@@ -3,7 +3,8 @@ const ctx = canvas.getContext('2d');
 
 var mode="Select";
 
-var layers=[];
+var layers = [];
+var selectedLayer = null;
 canvas.height = 1000;
 canvas.width = 1000;
 zoom=1;
@@ -25,10 +26,6 @@ canvas.addEventListener('mouseup',function(event){
   
 function changeZoom(multiplier) {
   zoom=zoom*multiplier
-  for (i=0;i<layers.length;i++) {
-    layers[i].x*zoom;
-    layers[i].y*zoom;
-  }
 }
 
 function changeMode(newMode){
@@ -69,9 +66,9 @@ function upload(){
 
 function update(){
 
-  document.getElementById('indicator').innerHTML = mode;
+  document.getElementById('indicator').innerHTML = mode + " " + zoom*100 + "%";
   ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle ="black";
+  ctx.fillStyle ="pink";
   ctx.fill();
 
   for (i=0;i<layers.length;i++){
@@ -84,9 +81,14 @@ function update(){
           //sees if the image is being Dragged
           layers[i].offsetX=mouseX - layers[i].x;
           layers[i].offsetY=mouseY - layers[i].y;
-          layers[i].beingDragged=true;
-        }
-        if (layers[i].beingDragged){
+            layers[i].beingDragged = true;
+            console.log("beingDragged")
+            if (selectedLayer == null) {
+                selectedLayer = i
+                console.log("Selected layer "+ i)
+            }
+            }
+            if (layers[i].beingDragged && selectedLayer==i) {
           //performs the actions if the layer is being dragged
           if (layers[i].visible && clicked && mode=="Select"){
             layers[i].x=mouseX-layers[i].offsetX;
@@ -94,7 +96,9 @@ function update(){
           }
           else{
             //if the layer is not being dragged or becomes invisible it is set to false
-            layers[i].beingDragged=false;
+              layers[i].beingDragged = false;
+              console.log("release "+i)
+              selectedLayer = null;
           }
         }
         if (mode=="Move")
