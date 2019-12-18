@@ -10,13 +10,19 @@
 </head>
 
 <body>
-  <div id="tools">
-    <button>Select</button>
-    <input id="inputFile"type="file" onchange="upload();" hidden/>
-    <button onclick="document.getElementById('inputFile').click();">Upload</button>
-  </div>
-  <div id="work-area">
-    <canvas id="canvas"></canvas>
+  <div class="container">
+    <span id="tools">
+      <p id="indicator">Select</p>
+      <input id="inputFile"type="file" onchange="upload();" hidden/>
+      <button onclick="document.getElementById('inputFile').click();">Upload</button>
+      <button onclick="changeMode('Select')">Select</button>
+      <button onclick="changeMode('Move')">Move</button>
+      <button onclick="changeZoom(2)">+</button>
+      <button onclick="changeZoom(0.5)">-</button>
+    </span>
+    <div id="work-area">
+      <canvas id="canvas"></canvas>
+    </div>
   </div>
 </body>
 

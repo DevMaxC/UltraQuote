@@ -1,17 +1,23 @@
 body {
-  overflow: hidden;
+  height: 100%
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
 }
 
 #tools {
-  position: absolute;
-  height: 98vh;
+  height: 100%;
   background-color: grey;
   display: flex;
   flex-direction: column;
   width: 150px;
+  margin: 0;
   z-index: 1;
 }
 
 #work-area {
+  background-color: black;
   display: inline;
 }
