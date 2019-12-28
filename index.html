@@ -15,8 +15,14 @@
       <p id="indicator">Select</p>
       <input id="inputFile"type="file" onchange="upload();" hidden/>
       <button onclick="document.getElementById('inputFile').click();">Upload</button>
-      <button onclick="changeMode('Select')">Select</button>
+      <button onclick="changeMode('Drag')">Drag</button>
       <button onclick="changeMode('Move')">Move</button>
+      <button onclick="changeMode('Shape')">Shape</button>
+      <button onclick="changeMode('Scale')">Set Scale</button>
+      <button onclick="changeLayer(1)">Layer Up</button>
+      <button onclick="changeLayer(-1)">Layer Down</button>
+      <button onclick="layerRemove(selectedLayer)">Remove Layer</button>
+      <button onclick="deselect()">Deselect</button>
       <button onclick="changeZoom(2)">+</button>
       <button onclick="changeZoom(0.5)">-</button>
     </span>
