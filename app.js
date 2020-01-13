@@ -8,7 +8,9 @@ var scale=1;
 var layers = [];
 var selectedLayer= null;
 var scaleEnabled=false;
+var dragEnabled=false;
 var moveEnabled= false;
+var resizeEnabled = false;
 var points=[];
 var firstX;
 var firstY;
@@ -125,6 +127,7 @@ function drawShape(points){
 }
 
 
+
 function update(){
   ctx.strokeStyle="Black";
   drawShape([{x:0, y:0},{x:100, y:0},{x:100, y:100},{x:0,y:100}]);
@@ -134,51 +137,48 @@ function update(){
   ctx.fill();
 
   //draw
-  for (i=0;i<layers.length;i++){
+for (i=0;i<layers.length;i++){
     if (layers[i].type=="Image"){
-      drawImage();
+		drawImage();
     }
-  }
+}
 
-  if (mode=="Drag"){
+if (mode=="Drag"){
     canvas.style.cursor = "hand"
     //if the mode is drag
     for (i=layers.length-1;i>=0;i--){
-      //go through all the layers
-      if (mouseDown){
-        if (collide(layers[i].x,layers[i].y,layers[i].obj.width, layers[i].obj.height,mouseX,mouseY)){
-          if (selectedLayer==null){
-            //initiate a dragging motion
-            selectedLayer = i;
-            //offsetX=mouseX-layers[i].x;
-            //offsetY=mouseY-layers[i].y;
-            //once we have found our clicked layer dont look for any more!
-            break;
-          }
-          else if (selectedLayer==i){
-            //continue a dragging motion
-            if (offsetX==null || offsetY==null){
-              offsetX=mouseX-layers[i].x;
-              offsetY=mouseY-layers[i].y;
-            }
-            layers[i].x=mouseX-offsetX;
-            layers[i].y=mouseY-offsetY;
-            //once we have dragged our selected layer dont look for any more!
-            break;
-          }
-          else{
-          }
-        }
-        else{
-          //if we havent already found a layer to drag and if mouse down but not colliding
-          if (selectedLayer==i){
-            selectedLayer=null;
-          }
-        }
-      }
-      else{
+        //go through all the layers
+		if (mouseDown){
+			if (collide(layers[i].x,layers[i].y,layers[i].obj.width, layers[i].obj.height,mouseX,mouseY)){
+				if (selectedLayer==null){
+					//initiate a selection
+					selectedLayer = i;
+					//offsetX=mouseX-layers[i].x;
+					//offsetY=mouseY-layers[i].y;
+					//once we have found our clicked layer dont look for any more!
+					break;
+				}
+			}else{
+				selectedLayer=null;
+			}
+		}
+	}
+	if (dragEnabled==false&&selectedLayer!=null){
+		dragEnabled=true;
+		offsetX=mouseX-layers[selectedLayer].x;
+		offsetY=mouseY-layers[selectedLayer].y;
+	}
+	else if(dragEnabled==true){
+		layers[selectedLayer].x=mouseX-offsetX;
+		layers[selectedLayer].y=mouseY-offsetY;
+	}
+	if (!mouseDown){
+		dragEnabled=false;
         offsetX=null;
         offsetY=null;
+		if (keysdown=="Delete"){
+			layerRemove(selectedLayer);
+		}
         if (keysdown=="ArrowDown"){
           layers[i].y+=1;
         }
@@ -191,21 +191,8 @@ function update(){
         if (keysdown=="ArrowRight"){
           layers[i].x+=1;
         }
-        break;
-      }
-    }
-    if (selectedLayer!=null){
-      ctx.beginPath();
-      ctx.arc(layers[selectedLayer].x,layers[selectedLayer].y,10,0,2*Math.PI);
-      ctx.strokeStyle="black";
-      ctx.lineWidth=10;
-      ctx.stroke();
-      ctx.fillStyle="white"
-      ctx.fill();
-      ctx.closePath();
-    }
-    
-  }
+	}  
+}
   if (mode=="Move"){
       if (mouseDown){
         if (moveEnabled==false){
@@ -224,11 +211,6 @@ function update(){
       }else{
         moveEnabled=false;
       }
-  }
-  if (mode=="Shape"){
-    if (mouseDown){
-
-    }
   }
   if (mode=="Scale"){
     if (mouseDown){
