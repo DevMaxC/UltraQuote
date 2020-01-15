@@ -1,0 +1,23 @@
+if (mode=="Drag"){
+    if (selectedLayer != null){
+    if (Math.abs(layers[selectedLayer].x-mouseX)<20){
+      if (Math.abs(layers[selectedLayer].y-mouseY)<20){
+        resizeEnabled="tl"
+      }
+      else if (Math.abs(layers[selectedLayer].y+layers[selectedLayer].obj.height-mouseY)<20){
+        resizeEnabled="bl"
+      }
+    }
+    else if (Math.abs(layers[selectedLayer].x+layers[selectedLayer].obj.width-mouseX)<20){
+      if (Math.abs(layers[selectedLayer].y-mouseY)<20){
+        resizeEnabled="tr"
+      }
+      else if (Math.abs(layers[selectedLayer].y+layers[selectedLayer].obj.height-mouseY)<20){
+        resizeEnabled="br"
+      }
+    }
+    else{
+      resizeEnabled=null
+    }
+  }
+    console.log(resizeEnabled)

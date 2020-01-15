@@ -11,6 +11,7 @@ var scaleEnabled=false;
 var dragEnabled=false;
 var moveEnabled= false;
 var resizeEnabled = false;
+var resizeDots=[]
 var points=[];
 var firstX;
 var firstY;
@@ -26,13 +27,13 @@ mouseY=0;
 canvas.addEventListener('mousemove',function(event){
   mouseX=event.offsetX;
   mouseY=event.offsetY;
-})
+});
 canvas.addEventListener('mousedown',function(event){
   mouseDown=true;
-})
+});
 canvas.addEventListener('mouseup',function(event){
   mouseDown=false;
-})
+});
 document.addEventListener('keydown',function(event){
   keysdown=event.key;
   console.log(keysdown);
@@ -40,7 +41,7 @@ document.addEventListener('keydown',function(event){
   
 function changeZoom(multiplier) {
   zoom=zoom*multiplier
-}
+};
 
 function changeMode(newMode){
 mode=newMode;
@@ -71,7 +72,7 @@ function layerRemove(index) {
 
 function deselect(){
   selectedLayer=null;
-}
+};
 
 function collide(sx,sy,dx,dy,x,y){
   //used to detect if a mouse is inside a square
@@ -82,7 +83,7 @@ function collide(sx,sy,dx,dy,x,y){
 
 function distance(x1,y1,x2,y2){
   return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))
-}
+};
 
 function upload(){
   var reader = new FileReader();
@@ -104,11 +105,11 @@ function changeLayer(diff){
   }
 };
 
-function drawImage(){
+function drawImage(i){
   ctx.drawImage(layers[i].obj,layers[i].x,layers[i].y,layers[i].obj.width,layers[i].obj.height);
   if (selectedLayer==i){
     ctx.beginPath();
-    ctx.lineWidth =10;
+    ctx.lineWidth =3;
     ctx.rect(layers[i].x,layers[i].y,layers[i].obj.width,layers[i].obj.height);
     ctx.strokeStyle="Red"
     ctx.stroke();
@@ -124,9 +125,7 @@ function drawShape(points){
   ctx.lineTo(points[0].x,points[0].y);
   ctx.stroke();
   ctx.closePath();
-}
-
-
+};
 
 function update(){
   ctx.strokeStyle="Black";
@@ -137,63 +136,65 @@ function update(){
   ctx.fill();
 
   //draw
-for (i=0;i<layers.length;i++){
-    if (layers[i].type=="Image"){
-		drawImage();
-    }
-}
+  for (i=0;i<layers.length;i++){
+      if (layers[i].type=="Image"){
+        drawImage(i);
+      }
+  }
 
-if (mode=="Drag"){
-    canvas.style.cursor = "hand"
-    //if the mode is drag
-    for (i=layers.length-1;i>=0;i--){
-        //go through all the layers
-		if (mouseDown){
-			if (collide(layers[i].x,layers[i].y,layers[i].obj.width, layers[i].obj.height,mouseX,mouseY)){
-				if (selectedLayer==null){
-					//initiate a selection
-					selectedLayer = i;
-					//offsetX=mouseX-layers[i].x;
-					//offsetY=mouseY-layers[i].y;
-					//once we have found our clicked layer dont look for any more!
-					break;
-				}
-			}else{
-				selectedLayer=null;
-			}
-		}
-	}
-	if (dragEnabled==false&&selectedLayer!=null){
-		dragEnabled=true;
-		offsetX=mouseX-layers[selectedLayer].x;
-		offsetY=mouseY-layers[selectedLayer].y;
-	}
-	else if(dragEnabled==true){
-		layers[selectedLayer].x=mouseX-offsetX;
-		layers[selectedLayer].y=mouseY-offsetY;
-	}
-	if (!mouseDown){
-		dragEnabled=false;
-        offsetX=null;
-        offsetY=null;
-		if (keysdown=="Delete"){
-			layerRemove(selectedLayer);
-		}
-        if (keysdown=="ArrowDown"){
-          layers[i].y+=1;
+  if (mode=="Drag"){
+    if (dragEnabled==false&&selectedLayer!=null){
+      console.log("poppp")
+      ctx.beginPath();
+      ctx.arc(layers[selectedLayer].x,(2*layers[selectedLayer].y+layers[selectedLayer].obj.height)/2, 10, 0, 2 * Math.PI);
+      ctx.arc(layers[selectedLayer].obj.width,(2*layers[selectedLayer].y+layers[selectedLayer].obj.height)/2, 10, 0, 2 * Math.PI);
+      ctx.strokeStyle="black";
+      ctx.fillStyle="red";
+      ctx.lineWidth="7"
+      ctx.stroke();
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    if (mouseDown){
+      if (selectedLayer==null){
+        for(var i=0;i<layers.length;i++){
+          if (collide(layers[i].x,layers[i].y,layers[i].obj.width, layers[i].obj.height,mouseX,mouseY)){
+            selectedLayer=i;
+          }
         }
-        if (keysdown=="ArrowUp"){
-          layers[i].y-=1;
+      }
+      else{
+        if (dragEnabled==false){
+          if (collide(layers[selectedLayer].x,layers[selectedLayer].y,layers[selectedLayer].obj.width, layers[selectedLayer].obj.height,mouseX,mouseY)){
+            dragEnabled=true;
+            offsetX=mouseX-layers[selectedLayer].x;
+            offsetY=mouseY-layers[selectedLayer].y;
+          }
+          else{
+            selectedLayer=null;
+          }
+          for(var i=layers.length-1;i>-1;i--){
+            if (collide(layers[i].x,layers[i].y,layers[i].obj.width, layers[i].obj.height,mouseX,mouseY)){
+              selectedLayer=i;
+              dragEnabled=true;
+              offsetX=mouseX-layers[selectedLayer].x;
+              offsetY=mouseY-layers[selectedLayer].y;
+              break;
+            }
+          }
         }
-        if (keysdown=="ArrowLeft"){
-          layers[i].x-=1;
+        else{
+          layers[selectedLayer].x=mouseX-offsetX;
+          layers[selectedLayer].y=mouseY-offsetY;
         }
-        if (keysdown=="ArrowRight"){
-          layers[i].x+=1;
-        }
-	}  
-}
-  if (mode=="Move"){
+      }
+    }
+    else{
+      dragEnabled=false;
+    }
+  }
+    if (mode=="Move"){
       if (mouseDown){
         if (moveEnabled==false){
           moveEnabled=true;
@@ -211,36 +212,38 @@ if (mode=="Drag"){
       }else{
         moveEnabled=false;
       }
-  }
-  if (mode=="Scale"){
-    if (mouseDown){
-      if (scaleEnabled){
-        ctx.beginPath();
-        ctx.moveTo(firstX,firstY);
-        ctx.lineTo(mouseX,mouseY);
-        ctx.strokeStyle="red";
-        ctx.linewidth=20;
-        ctx.stroke();
-        ctx.closePath();
-      }else{
-        scaleEnabled=true;
-        firstX=mouseX;
-        firstY=mouseY;
+    }
+    if (mode=="Scale"){
+      if (mouseDown){
+        if (scaleEnabled){
+          ctx.beginPath();
+          ctx.moveTo(firstX,firstY);
+          ctx.lineTo(mouseX,mouseY);
+          ctx.strokeStyle="red";
+          ctx.linewidth=20;
+          ctx.stroke();
+          ctx.closePath();
+        }else{
+          scaleEnabled=true;
+          firstX=mouseX;
+          firstY=mouseY;
+        }
+      }
+      else if (scaleEnabled){
+        var input = window.prompt(Math.round(distance(firstX, firstY,mouseX,mouseY)) + " pixels equates to how many units?")
+        if (input == null||input==""){
+          alert("Fail, please put in a number, i.e. 4   (meaning that n pixels equate to 4 units)")
+          scaleEnabled=false;
+        }
+        else{
+          scale=distance(firstX, firstY,mouseX,mouseY)/input
+          scaleEnabled=false;
+        }
       }
     }
-    else if (scaleEnabled){
-      var input = window.prompt(Math.round(distance(firstX, firstY,mouseX,mouseY)) + " pixels equates to how many units?")
-      if (input == null||input==""){
-        alert("Fail, please put in a number, i.e. 4   (meaning that n pixels equate to 4 units)")
-        scaleEnabled=false;
-      }
-      else{
-        scale=distance(firstX, firstY,mouseX,mouseY)/input
-        scaleEnabled=false;
-      }
-    }
-  }
-keysdown="";
-}
+  keysdown="";
+};
+
+
 
 setInterval(update,0)
