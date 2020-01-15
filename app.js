@@ -144,16 +144,36 @@ function update(){
 
   if (mode=="Drag"){
     if (dragEnabled==false&&selectedLayer!=null){
-      console.log("poppp")
-      ctx.beginPath();
-      ctx.arc(layers[selectedLayer].x,(2*layers[selectedLayer].y+layers[selectedLayer].obj.height)/2, 10, 0, 2 * Math.PI);
-      ctx.arc(layers[selectedLayer].obj.width,(2*layers[selectedLayer].y+layers[selectedLayer].obj.height)/2, 10, 0, 2 * Math.PI);
-      ctx.strokeStyle="black";
-      ctx.fillStyle="red";
-      ctx.lineWidth="7"
-      ctx.stroke();
-      ctx.fill();
-      ctx.closePath();
+      ctx.strokeStyle = "black";
+      ctx.fillStyle = "red";
+      ctx.lineWidth = "7"
+      for (i = 0; i < 4; i++) {
+        ctx.beginPath();
+        if (i == 0) {
+          //left
+          ctx.arc(layers[selectedLayer].x, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, 10, 0, 2 * Math.PI);
+          if (distance(layers[selectedLayer].x, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, mouseX, mouseY) < 10) {
+            if (mouseDown) {
+              if (resizeEnabled)
+            }
+          }
+        }
+        else if (i == 1) {
+          //right
+          ctx.arc(layers[selectedLayer].x + layers[selectedLayer].obj.width, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, 10, 0, 2 * Math.PI);
+        }
+        else if (i == 2) {
+          //up
+          ctx.arc((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y, 10, 0, 2 * Math.PI);
+        }
+        else if (i == 3) {
+          //down
+          ctx.arc((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y + layers[selectedLayer].obj.height, 10, 0, 2 * Math.PI);
+        }
+        ctx.stroke();
+        ctx.fill();
+        ctx.closePath();
+      }
     }
 
     if (mouseDown){
@@ -243,7 +263,4 @@ function update(){
     }
   keysdown="";
 };
-
-
-
 setInterval(update,0)
