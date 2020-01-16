@@ -11,7 +11,7 @@ var scaleEnabled=false;
 var dragEnabled=false;
 var moveEnabled= false;
 var resizeEnabled = false;
-var resizeDots=[]
+var previousSize
 var points=[];
 var firstX;
 var firstY;
@@ -143,7 +143,7 @@ function update(){
   }
 
   if (mode=="Drag"){
-    if (dragEnabled==false&&selectedLayer!=null){
+    if (dragEnabled==false&&selectedLayer!=null&&resizeEnabled==null){
       ctx.strokeStyle = "black";
       ctx.fillStyle = "red";
       ctx.lineWidth = "7"
@@ -154,64 +154,108 @@ function update(){
           ctx.arc(layers[selectedLayer].x, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, 10, 0, 2 * Math.PI);
           if (distance(layers[selectedLayer].x, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, mouseX, mouseY) < 10) {
             if (mouseDown) {
-              if (resizeEnabled)
+              console.log("left")
+              resizeEnabled="left"
+              firstX=mouseX
+              previousSize=layers[selectedLayer].obj.width
             }
           }
         }
         else if (i == 1) {
           //right
           ctx.arc(layers[selectedLayer].x + layers[selectedLayer].obj.width, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, 10, 0, 2 * Math.PI);
+          if (distance(layers[selectedLayer].x + layers[selectedLayer].obj.width, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, mouseX, mouseY) < 10) {
+            if (mouseDown) {
+              console.log("right")
+              resizeEnabled="right"
+              firstX=mouseX
+              previousSize=layers[selectedLayer].obj.width
+            }
+          }
         }
         else if (i == 2) {
           //up
           ctx.arc((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y, 10, 0, 2 * Math.PI);
+          if (distance((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y, mouseX, mouseY) < 10) {
+            if (mouseDown) {
+              console.log("up")
+              resizeEnabled="up"
+              firstY=mouseY
+              previousSize=layers[selectedLayer].obj.height
+            }
+          }
         }
         else if (i == 3) {
           //down
           ctx.arc((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y + layers[selectedLayer].obj.height, 10, 0, 2 * Math.PI);
+          if (distance((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y + layers[selectedLayer].obj.height, mouseX, mouseY) < 10) {
+            if (mouseDown) {
+              console.log("down")
+              resizeEnabled="down"
+              firstY=mouseY
+              previousSize=layers[selectedLayer].obj.height
+            }
+          }
         }
         ctx.stroke();
         ctx.fill();
         ctx.closePath();
       }
     }
-
-    if (mouseDown){
-      if (selectedLayer==null){
-        for(var i=0;i<layers.length;i++){
-          if (collide(layers[i].x,layers[i].y,layers[i].obj.width, layers[i].obj.height,mouseX,mouseY)){
-            selectedLayer=i;
-          }
+    if (resizeEnabled!=null){
+      if (mouseDown){
+        if (resizeEnabled=="left"){
+          layers[selectedLayer].obj.width=previousSize+firstX-mouseX
+          layers[selectedLayer].x=mouseX
+        }
+        if (resizeEnabled=="right"){
+          layers[selectedLayer].obj.width=previousSize-firstX+mouseX
         }
       }
       else{
-        if (dragEnabled==false){
-          if (collide(layers[selectedLayer].x,layers[selectedLayer].y,layers[selectedLayer].obj.width, layers[selectedLayer].obj.height,mouseX,mouseY)){
-            dragEnabled=true;
-            offsetX=mouseX-layers[selectedLayer].x;
-            offsetY=mouseY-layers[selectedLayer].y;
-          }
-          else{
-            selectedLayer=null;
-          }
-          for(var i=layers.length-1;i>-1;i--){
+        resizeEnabled=null
+        firstX=null
+        firstY=null
+      }
+    }
+    else{
+      if (mouseDown){
+        if (selectedLayer==null){
+          for(var i=0;i<layers.length;i++){
             if (collide(layers[i].x,layers[i].y,layers[i].obj.width, layers[i].obj.height,mouseX,mouseY)){
               selectedLayer=i;
-              dragEnabled=true;
-              offsetX=mouseX-layers[selectedLayer].x;
-              offsetY=mouseY-layers[selectedLayer].y;
-              break;
             }
           }
         }
         else{
-          layers[selectedLayer].x=mouseX-offsetX;
-          layers[selectedLayer].y=mouseY-offsetY;
+          if (dragEnabled==false){
+            if (collide(layers[selectedLayer].x,layers[selectedLayer].y,layers[selectedLayer].obj.width, layers[selectedLayer].obj.height,mouseX,mouseY)){
+              dragEnabled=true;
+              offsetX=mouseX-layers[selectedLayer].x;
+              offsetY=mouseY-layers[selectedLayer].y;
+            }
+            else{
+              selectedLayer=null;
+            }
+            for(var i=layers.length-1;i>-1;i--){
+              if (collide(layers[i].x,layers[i].y,layers[i].obj.width, layers[i].obj.height,mouseX,mouseY)){
+                selectedLayer=i;
+                dragEnabled=true;
+                offsetX=mouseX-layers[selectedLayer].x;
+                offsetY=mouseY-layers[selectedLayer].y;
+                break;
+              }
+            }
+          }
+          else{
+            layers[selectedLayer].x=mouseX-offsetX;
+            layers[selectedLayer].y=mouseY-offsetY;
+          }
         }
       }
-    }
-    else{
-      dragEnabled=false;
+      else{
+        dragEnabled=false;
+      }
     }
   }
     if (mode=="Move"){
