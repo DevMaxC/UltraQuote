@@ -9,10 +9,12 @@
 </head>
 
 <body>
-  <div class="container">
-    <span id="tools">
-      <p id="indicator">Select</p>
-      <input id="inputFile"type="file" onchange="upload();" hidden/>
+  <div id="container"> 
+    <div id="tools">
+      <div id =indicatorBox>
+        <p id="indicator">Select</p>
+      </div>
+      <input id="inputFile" type="file" onchange="upload();" hidden/>
       <button onclick="document.getElementById('inputFile').click();">Upload</button>
       <button onclick="changeMode('Drag')">Drag</button>
       <button onclick="changeMode('Move')">Move</button>
@@ -29,9 +31,18 @@
       <button onclick="changeZoom(2)">+</button>
       <button onclick="changeZoom(0.5)">-</button>
       <button onclick="saveFile()">Save</button>
-    </span>
+    </div>
     <div id="work-area">
       <canvas id="canvas"></canvas>
+    </div>
+    <div id="layersArea">
+      <div id="areaBox">
+        <p id="totalArea"></p>
+      </div>
+      <div id=priceConversionBox>
+        <p id=priceConversionText></p>
+        <input id=priceConversion type="text">
+      </div>
     </div>
   </div>
 </body>

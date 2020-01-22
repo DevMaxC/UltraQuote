@@ -1,20 +1,53 @@
 body {
-  height: 100%
+  margin: 0;
+  overflow: hidden;
+  color: white;
+  font-family: Arial;
+  text-align: center;
 }
 
-.container {
+#container {
   display: flex;
   flex-direction: row;
 }
 
+button {
+  border: none;
+  background-color: #535353;
+  color: white;
+  font-family: Arial;
+}
+button:hover {
+  background-color: #454545;
+}
+
 #tools {
-  height: 93vh;
-  background-color: #696969;
+  height: 100vh;
+  background-color: #535353;
   display: flex;
   flex-direction: column;
-  width: 150px;
+}
+
+canvas{
+  height: 100%;
+  width: 100%;
 }
 
 #work-area {
-  display: inline;
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  flex-direction:column;
+}
+
+#layersArea{
+  height: 100vh;
+  width:10%;
+  display: flex;
+  flex-direction:column;
+  background-color: #535353;
+}
+
+#priceConversionBox{
+  padding: 10px;
 }

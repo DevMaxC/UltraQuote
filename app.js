@@ -6,6 +6,8 @@ var scale=1;
 var scaleUnit="Px";
 //how many pixels per real unit
 
+document.getElementById('priceConversionText').innerHTML ="£/"+scaleUnit;
+
 var layers = [];
 var selectedLayer= null;
 var scaleEnabled=false;
@@ -19,8 +21,8 @@ var points=[];
 var firstX;
 var firstY;
 var firstRotation;
-canvas.height = 1001;
-canvas.width = 1001;
+//canvas.height = 1001;
+//canvas.width = 1001;
 zoom=1;
 
 var keysdown=[];
@@ -70,7 +72,35 @@ function changeMode(newMode){
   if (newMode!="setRotation"){
     selectedLayer=null;
   }
+  if (newMode=="Measure"||newMode=="Scale"){
+    canvas.style.cursor="crosshair"
+  }
+  if (newMode=="Drag"){
+    canvas.style.cursor="pointer"
+  }
+  if (newMode=="Move"){
+    canvas.style.cursor="move"
+  }
 };
+
+
+/// BEGIN   CODE BY GMAN FROM https://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5/43364730
+function resizeCanvasToDisplaySize(canvas) {
+  // look up the size the canvas is being displayed
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+
+  // If it's resolution does not match change it
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+    return true;
+  }
+
+  return false;
+}
+
+///END
 
 function toggleDimensions(layerNumber){
   console.log(layerNumber)
@@ -82,12 +112,12 @@ function toggleBackground(layerNumber){
   dragEnabled=null;
 };
 
-function layerAdd(type,obj,x=0,y=0){
+function layerAdd(type,obj){
   layer={
     type:type,
     name:name,
-    x:x,
-    y:y,
+    x:canvas.width/2-obj.width*2,
+    y:((canvas.height-obj.height)/2),
     obj:obj,
     showDimensions:false,
     background:false,
@@ -138,7 +168,7 @@ function changeLayer(diff){
   }
 };
 
-function newRect(height=100,width=100,colour="green",x=0,y=0,showDimensions=false){
+function newRect(height=100,width=100,colour="green",x=canvas.width/2,y=canvas.height/2,showDimensions=false){
   if (scaleUnit[0]=="M"){
     width=4*scale
   }
@@ -146,8 +176,8 @@ function newRect(height=100,width=100,colour="green",x=0,y=0,showDimensions=fals
     width=400*scale
   }
   obj={height:height,width:width,colour}
-  x=0;
-  y=0;
+  x=x;
+  y=y;
   showDimensions=false;
   layerAdd("rect",obj,x,y,showDimensions);
 };
@@ -185,6 +215,14 @@ function drawImage(i){
   }
 };
 
+function calculateTotalGrassArea(){
+  var totalArea = 0
+  for (var i = 0; i <layers.length;i++){
+    if (layers[i].type =="rect")totalArea+=layers[i].obj.width*layers[i].obj.height
+  }
+  return Math.round(totalArea)
+}
+
 function drawRect(i){
   ctx.fillStyle=layers[i].obj.colour;
   ctx.fillRect(layers[i].x,layers[i].y,layers[i].obj.width,layers[i].obj.height);
@@ -205,10 +243,12 @@ function drawRect(i){
 
 function update(){
   ctx.strokeStyle="Black";
-  document.getElementById('indicator').innerHTML = mode + " " + zoom*100 + "% " + selectedLayer;
+  document.getElementById('totalArea').innerHTML=calculateTotalGrassArea()+" "+scaleUnit+"²"
+  document.getElementById('indicator').innerHTML =zoom*100 + "% ";
   ctx.fillStyle ="#323232";
   ctx.fillRect(0,0,canvas.width/zoom,canvas.height/zoom);
   ctx.fill();
+  resizeCanvasToDisplaySize(canvas)
 
   //draw
   for (i=0;i<layers.length;i++){
@@ -386,6 +426,7 @@ function update(){
       else{
         scale=distance(firstX, firstY,mouseX,mouseY)/input
         scaleUnit=window.prompt("What units are these? i.e. Metres,Inches,CM")
+        document.getElementById('priceConversionText').innerHTML ="£/"+scaleUnit;
         scaleEnabled=false;
       }
     }
