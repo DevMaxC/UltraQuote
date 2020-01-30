@@ -83,17 +83,24 @@ function changeMode(newMode){
   }
 };
 
+function askColor() {
+    var ui = window.prompt("Choose a color to set.")
+    if (isColor(ui)) {
+
+    }
+}
+
 
 /// BEGIN   CODE BY GMAN FROM https://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5/43364730
 function resizeCanvasToDisplaySize(canvas) {
   // look up the size the canvas is being displayed
-  const width = canvas.clientWidth;
-  const height = canvas.clientHeight;
+  const realwidth = canvas.clientWidth;
+  const realheight = canvas.clientHeight;
 
   // If it's resolution does not match change it
-  if (canvas.width !== width || canvas.height !== height) {
-    canvas.width = width;
-    canvas.height = height;
+  if (canvas.width*zoom !== realwidth || canvas.height*zoom !== realheight) {
+    canvas.width = realwidth;
+    canvas.height = realheight;
     return true;
   }
 
@@ -101,6 +108,62 @@ function resizeCanvasToDisplaySize(canvas) {
 }
 
 ///END
+
+
+//BEGIN   CODE BY DAN DAVIS FROM https://stackoverflow.com/questions/48484767/javascript-check-if-string-is-valid-css-color
+function isColor(strColor) {
+    var s = new Option().style;
+    s.color = strColor;
+    return s.color == strColor;
+}
+//END
+
+
+class Layer {
+  constructor(obj, x = (canvas.width - obj.width) / 2, y = (canvas.height - obj.height) / 2, showDimensions = false, rotation = 0, colour = "Green", background = false){
+    this.obj=obj;
+    this.x=x;
+    this.y=y;
+    this.showDimensions=showDimensions;
+    this.background=background;
+    this.rotation=rotation;
+    this.colour=colour;
+  }
+  draw(i){
+    ctx.save();
+    if (this.background) {
+      //detected as a background
+      ctx.translate((this.x*2+this.obj.width)/2,(this.y*2+this.obj.height)/2);
+      ctx.rotate(this.rotation* Math.PI / 180);
+      ctx.drawImage(this.obj,-1*this.obj.width/2,-1*this.obj.height/2,this.obj.width,this.obj.height);
+    }
+    else if (Object.keys(this.obj).length === 2) {
+      //detected as a rect
+      ctx.fillStyle=this.colour;
+      ctx.fillRect(this.x,this.y,this.obj.width,this.obj.height);
+    }
+    else {
+      //detected as a image
+      ctx.drawImage(this.obj, this.x, this.y, this.obj.width, this.obj.height);
+      }
+    if (selectedLayer == i && !this.background) {
+      //draw box around selected object
+      ctx.beginPath();
+      ctx.lineWidth =3;
+      ctx.rect(this.x, this.y, this.obj.width, this.obj.height);
+      ctx.strokeStyle="Red"
+      ctx.stroke();
+    }
+    if (this.showDimensions) {
+      ctx.font = (this.obj.width / 12 + "px sans-serif")
+      ctx.fillStyle = "Black"
+      ctx.textAlign = "center";
+      ctx.fillText((this.obj.width / scale).toFixed(2) + " x " + (this.obj.height / scale).toFixed(2) + " " + scaleUnit, (this.obj.width + 2 * this.x) / 2, (this.obj.height + 2 * this.y) / 2)
+    }
+    ctx.restore()
+  }
+
+}
 
 function toggleDimensions(layerNumber){
   console.log(layerNumber)
@@ -110,20 +173,6 @@ function toggleDimensions(layerNumber){
 function toggleBackground(layerNumber){
   layers[layerNumber].background=!layers[layerNumber].background
   dragEnabled=null;
-};
-
-function layerAdd(type,obj){
-  layer={
-    type:type,
-    name:name,
-    x:canvas.width/2-obj.width*2,
-    y:((canvas.height-obj.height)/2),
-    obj:obj,
-    showDimensions:false,
-    background:false,
-    rotation:0,
-  }
-  layers.push(layer)
 };
 
 function layerRemove(index) {
@@ -155,8 +204,8 @@ function upload(){
     img.src = e.target.result;
   };
   reader.readAsDataURL(document.getElementById("inputFile").files[0]);
-  document.getElementById("inputFile").value="";
-  layerAdd("Image",img);
+  document.getElementById("inputFile").value = "";
+  layers.push(new Layer(img))
 };
 
 function changeLayer(diff){
@@ -168,51 +217,15 @@ function changeLayer(diff){
   }
 };
 
-function newRect(height=100,width=100,colour="green",x=canvas.width/2,y=canvas.height/2,showDimensions=false){
+function newRect(height=100,width=100){
   if (scaleUnit[0]=="M"){
     width=4*scale
   }
   if (scaleUnit=="CM"){
     width=400*scale
   }
-  obj={height:height,width:width,colour}
-  x=x;
-  y=y;
-  showDimensions=false;
-  layerAdd("rect",obj,x,y,showDimensions);
-};
-
-function drawImage(i){
-  if (layers[i].background){
-    ctx.save();
-    ctx.translate((layers[i].x*2+layers[i].obj.width)/2,(layers[i].y*2+layers[i].obj.height)/2);
-    ctx.rotate(layers[i].rotation* Math.PI / 180);
-    ctx.drawImage(layers[i].obj,-1*layers[i].obj.width/2,-1*layers[i].obj.height/2,layers[i].obj.width,layers[i].obj.height);
-    if (selectedLayer==i){
-      ctx.beginPath();
-      ctx.lineWidth =3;
-      ctx.rect(-1*layers[i].obj.width/2,-1*layers[i].obj.height/2,layers[i].obj.width,layers[i].obj.height);
-      ctx.strokeStyle="Red"
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-  else{
-    ctx.drawImage(layers[i].obj,layers[i].x,layers[i].y,layers[i].obj.width,layers[i].obj.height);
-    if (selectedLayer==i){
-      ctx.beginPath();
-      ctx.lineWidth =3;
-      ctx.rect(layers[i].x,layers[i].y,layers[i].obj.width,layers[i].obj.height);
-      ctx.strokeStyle="Red"
-      ctx.stroke();
-    }
-    if (layers[i].showDimensions ){
-      ctx.font=(layers[i].obj.width/12 +"px sans-serif")
-      ctx.fillStyle="Black"
-      ctx.textAlign = "center";
-      ctx.fillText((layers[i].obj.width/scale).toFixed(2)+" x "+(layers[i].obj.height/scale).toFixed(2)+" "+scaleUnit,(layers[i].obj.width+2*layers[i].x)/2,(layers[i].obj.height+2*layers[i].y)/2)
-    }
-  }
+  obj={height:height,width:width}
+  layers.push(new Layer(obj));
 };
 
 function calculateTotalGrassArea(){
@@ -222,24 +235,6 @@ function calculateTotalGrassArea(){
   }
   return Math.round(totalArea)
 }
-
-function drawRect(i){
-  ctx.fillStyle=layers[i].obj.colour;
-  ctx.fillRect(layers[i].x,layers[i].y,layers[i].obj.width,layers[i].obj.height);
-  if (selectedLayer==i){
-    ctx.beginPath();
-    ctx.lineWidth =3;
-    ctx.rect(layers[i].x,layers[i].y,layers[i].obj.width,layers[i].obj.height);
-    ctx.strokeStyle="Red"
-    ctx.stroke();
-  }
-  if (layers[i].showDimensions){
-    ctx.font=(layers[i].obj.width/10 +"px sans-serif")
-    ctx.fillStyle="Black"
-    ctx.textAlign = "center";
-    ctx.fillText((layers[i].obj.width/scale).toFixed(2)+" x "+(layers[i].obj.height/scale).toFixed(2)+" "+scaleUnit,(layers[i].obj.width+2*layers[i].x)/2,(layers[i].obj.height+2*layers[i].y)/2)
-  }
-};
 
 function update(){
   ctx.strokeStyle="Black";
@@ -252,12 +247,7 @@ function update(){
 
   //draw
   for (i=0;i<layers.length;i++){
-      if (layers[i].type=="Image"){
-        drawImage(i);
-      }
-      if (layers[i].type=="rect"){
-        drawRect(i);
-      }
+      layers[i].draw(i)
   }
 
   if (mode=="Drag"){
