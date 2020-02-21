@@ -6,7 +6,7 @@ var scale=1;
 var scaleUnit="Px";
 //how many pixels per real unit
 
-document.getElementById('priceConversionText').innerHTML ="£/"+scaleUnit;
+document.getElementById('priceConversionText').innerHTML ="£/"+scaleUnit+"²";
 
 var layers = [];
 var selectedLayer= null;
@@ -50,7 +50,6 @@ document.addEventListener('keydown',function(event){
   }
   if (count==0){
     keysdown.push(event.key);
-    console.log(keysdown);
   }
 });
 document.addEventListener('keyup',function(event){
@@ -59,7 +58,6 @@ document.addEventListener('keyup',function(event){
       keysdown.splice(i,1);
     }
   }
-  console.log(keysdown);
 });
   
 function changeZoom(multiplier) {
@@ -83,114 +81,143 @@ function changeMode(newMode){
   }
 };
 
-function askColor() {
-    var ui = window.prompt("Choose a color to set.")
-    if (isColor(ui)) {
-
-    }
-}
-
-
-/// BEGIN   CODE BY GMAN FROM https://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5/43364730
+/// BEGIN   CODE ADAPTED FROM https://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5/43364730 BY GMAN
 function resizeCanvasToDisplaySize(canvas) {
   // look up the size the canvas is being displayed
-  const realwidth = canvas.clientWidth;
-  const realheight = canvas.clientHeight;
-
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
   // If it's resolution does not match change it
-  if (canvas.width*zoom !== realwidth || canvas.height*zoom !== realheight) {
-    canvas.width = realwidth;
-    canvas.height = realheight;
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+    ctx.scale(zoom,zoom)
     return true;
   }
 
   return false;
 }
-
 ///END
 
-
-//BEGIN   CODE BY DAN DAVIS FROM https://stackoverflow.com/questions/48484767/javascript-check-if-string-is-valid-css-color
-function isColor(strColor) {
-    var s = new Option().style;
-    s.color = strColor;
-    return s.color == strColor;
+function save(){
+  savetext=""
+  for (i=0;i<layers.length;i++){
+    savetext+="@"; //adds a seperator to save text so that layers can be distinguished and seperated
+    savetext+=layers[i].toText() //gets the text version of the layer and adds it to the save text
+  }
+  return savetext;
 }
-//END
 
+function load(savetext){
+  selectedLayer=null;
+  layers=[] //removes all layers before the load.
+
+  //splits the combined string into individual layers in string format
+
+  var loadtext=savetext.split("@");
+  loadtext.shift(); // removes the first result since currently this isnt being used for anything, this could be used for non layer data, i.e. selectedLayer, but this seems unnececary and complicated
+
+
+  for (i=0;i<loadtext.length;i++){
+    var properties=loadtext[i].split(" ")
+
+    //turning the string back into the data type it should be
+
+    properties[7]=Number(properties[7])//width
+    properties[8]=Number(properties[8])//height
+    properties[1]=Number(properties[1])//x
+    properties[2]=Number(properties[2])//y
+    properties[5]=Number(properties[5])//rotation
+    properties[10]=Number(properties[10])//opacity
+
+    properties[3]=(properties[3]==true)//showDimensions
+    properties[4]=(properties[4]==true)//background
+
+
+    // recreating each layer and adding it back into the array of layers
+    if (properties[0]=="Rect"){
+      layers.push(new Layer({width:properties[7],height:properties[8]},properties[0],x=properties[1],y=properties[2],showDimensions=properties[3],rotation=properties[5],color=properties[6],opacity=properties[10],background=properties[4]))
+    }else if (properties[0]=="Image"){
+      var img=new Image(); //constructs an image type and sets the individual properties.
+      img.src=properties[9] 
+      img.width=properties[7]
+      img.height=properties[8]
+      layers.push(new Layer(img,properties[0],x=properties[1],y=properties[2],showDimensions=properties[3],rotation=properties[5],color=properties[6],opacity=properties[10],background=properties[4]))
+    }
+  }
+}
 
 class Layer {
-  constructor(obj, x = (canvas.width - obj.width) / 2, y = (canvas.height - obj.height) / 2, showDimensions = false, rotation = 0, colour = "Green", background = false){
+  constructor(obj,type, x = (canvas.width - obj.width) / 2, y = (canvas.height - obj.height) / 2, showDimensions = false, rotation = 0,opacity = 100, colour = "#008000", background = false){
     this.obj=obj;
+    this.type=type;
     this.x=x;
     this.y=y;
     this.showDimensions=showDimensions;
     this.background=background;
     this.rotation=rotation;
+    this.opacity=opacity;
     this.colour=colour;
   }
   draw(i){
     ctx.save();
-    if (this.background) {
+    ctx.globalAlpha=this.opacity/100;
+    if (this.background==true) {
       //detected as a background
-      ctx.translate((this.x*2+this.obj.width)/2,(this.y*2+this.obj.height)/2);
-      ctx.rotate(this.rotation* Math.PI / 180);
-      ctx.drawImage(this.obj,-1*this.obj.width/2,-1*this.obj.height/2,this.obj.width,this.obj.height);
+      ctx.translate((this.x*2+this.obj.width)/2,(this.y*2+this.obj.height)/2); //translates to the center of the image so that in rotation we are rotating around the center rather than from 0,0
+      ctx.rotate(this.rotation* Math.PI / 180); //applies the rotation
+      ctx.drawImage(this.obj,-1*this.obj.width/2,-1*this.obj.height/2,this.obj.width,this.obj.height); //draws the image in the correct position, shifted based on where the canvas translated to
     }
-    else if (Object.keys(this.obj).length === 2) {
+    else if (this.type =="Rect") {
       //detected as a rect
       ctx.fillStyle=this.colour;
       ctx.fillRect(this.x,this.y,this.obj.width,this.obj.height);
     }
-    else {
+    else if (this.type=="Image"){
       //detected as a image
       ctx.drawImage(this.obj, this.x, this.y, this.obj.width, this.obj.height);
       }
     if (selectedLayer == i && !this.background) {
       //draw box around selected object
       ctx.beginPath();
-      ctx.lineWidth =3;
+      ctx.globalAlpha=1;
+      ctx.linejoin='miter';
+      ctx.lineWidth =3/zoom;
       ctx.rect(this.x, this.y, this.obj.width, this.obj.height);
-      ctx.strokeStyle="Red"
+      ctx.strokeStyle="White"
       ctx.stroke();
     }
     if (this.showDimensions) {
-      ctx.font = (this.obj.width / 12 + "px sans-serif")
-      ctx.fillStyle = "Black"
+      ctx.font = (this.obj.width / 12 + "px sans-serif") //sets the font size to an appropriate size to fit in the box horizontally.
+      ctx.fillStyle = "Black";
       ctx.textAlign = "center";
-      ctx.fillText((this.obj.width / scale).toFixed(2) + " x " + (this.obj.height / scale).toFixed(2) + " " + scaleUnit, (this.obj.width + 2 * this.x) / 2, (this.obj.height + 2 * this.y) / 2)
+      ctx.fillText((this.obj.width / scale).toFixed(2) + " x " + (this.obj.height / scale).toFixed(2) + " " + scaleUnit, (this.obj.width + 2 * this.x) / 2, (this.obj.height + 2 * this.y) / 2) //only shows the size to 2 decimat places
     }
     ctx.restore()
   }
 
-}
+  area(){
+    return this.obj.width/scale * this.obj.height/scale //calculates area of perimiter
+  }
 
-function toggleDimensions(layerNumber){
-  console.log(layerNumber)
-  layers[layerNumber].showDimensions=!layers[layerNumber].showDimensions
-};
+  perimiter(){
+    return this.obj.width*2 + this.obj.height*2 //calculates perimiter of layer
+  }
 
-function toggleBackground(layerNumber){
-  layers[layerNumber].background=!layers[layerNumber].background
-  dragEnabled=null;
+  isTouchingMouse(){
+    return (mouseX>this.x&&mouseY>this.y&&mouseX<this.x+this.obj.width&&mouseY<this.y+this.obj.height)
+  }
+
+  toText(){
+    return this.type+" "+this.x+" "+this.y+" "+this.showDimensions+" "+this.background+" "+this.rotation+" "+this.opacity+" "+this.obj.width+" "+this.obj.height+" "+this.obj.src+" "+this.colour //turns the properties of the layer to a string so that it can be saved
+  }
 };
 
 function layerRemove(index) {
+  //removes a layer
   if (index!=null){
     layers.splice(index, 1)
   }
   selectedLayer=null;
-};
-
-function deselect(){
-  selectedLayer=null;
-};
-
-function collide(sx,sy,dx,dy,x,y){
-  //used to detect if a mouse is inside a square
-  //sx/sy is the origin x/y of square, dx / dy is the size
-  //x/y is mouse position
-  return (x>sx && y>sy && x<sx+dx && y<sy+dy);
 };
 
 function distance(x1,y1,x2,y2){
@@ -198,14 +225,17 @@ function distance(x1,y1,x2,y2){
 };
 
 function upload(){
-  var reader = new FileReader();
-  img=new Image();
+  var reader = new FileReader(); //creates a file reader object
+  img=new Image(); //creates an image object
   reader.onload = function(e){
-    img.src = e.target.result;
+    img.src = e.target.result; //creates an src
   };
   reader.readAsDataURL(document.getElementById("inputFile").files[0]);
   document.getElementById("inputFile").value = "";
-  layers.push(new Layer(img))
+  img.onload = function(e) {
+    layers.push(new Layer(img,"Image"))
+    selectedLayer=layers.length-1;
+  }
 };
 
 function changeLayer(diff){
@@ -218,32 +248,50 @@ function changeLayer(diff){
 };
 
 function newRect(height=100,width=100){
+  //sets the width of the game to 4 Metres as is the standard roll width
   if (scaleUnit[0]=="M"){
     width=4*scale
   }
   if (scaleUnit=="CM"){
     width=400*scale
   }
+  //creates an object containing the width and height of the rectangle, this is similar to the image object so we can reuse lots of code.
   obj={height:height,width:width}
-  layers.push(new Layer(obj));
+  layers.push(new Layer(obj,"Rect"));
+  selectedLayer=layers.length-1;//sets the selected layer to the layer that has just been created. so the new rectangle is selected.
 };
 
 function calculateTotalGrassArea(){
   var totalArea = 0
   for (var i = 0; i <layers.length;i++){
-    if (layers[i].type =="rect")totalArea+=layers[i].obj.width*layers[i].obj.height
+    if (layers[i].type == "Rect"){totalArea+=layers[i].area()} // finds all the rectangles (ignores Images), gets their areas and adds them to a total.
   }
-  return Math.round(totalArea)
-}
+  return Math.round(totalArea) // returns the total area, which is rounded to the nearest number, so that it isnt influenced by precise decimal sizes of rectangles.
+};
 
-function update(){
-  ctx.strokeStyle="Black";
+function duplicateLayer(targetLayer){
+  if (targetLayer.type=="Rect"){
+    layers.push(new Layer({width:targetLayer.obj.width, height:targetLayer.obj.height},targetLayer.type,targetLayer.x,targetLayer.y,targetLayer.showDimensions,targetLayer.rotation,targetLayer.opacity,targetLayer.colour,targetLayer.background))
+  }
+  else if (targetLayer.type=="Image"){
+    var img = new Image()
+    img.width=targetLayer.obj.width
+    img.height=targetLayer.obj.height
+    img.src=targetLayer.obj.src
+    layers.push(new Layer(img,targetLayer.type,targetLayer.x,targetLayer.y,targetLayer.showDimensions,targetLayer.rotation,targetLayer.opacity,targetLayer.colour,targetLayer.background))
+  }
+};
+
+function update(){ 
   document.getElementById('totalArea').innerHTML=calculateTotalGrassArea()+" "+scaleUnit+"²"
   document.getElementById('indicator').innerHTML =zoom*100 + "% ";
+  document.getElementById("priceConversionTotal").innerHTML="Total = £"+(calculateTotalGrassArea()*Number(document.getElementById("priceConversion").value));
+
+  ctx.strokeStyle="Black";
   ctx.fillStyle ="#323232";
+  resizeCanvasToDisplaySize(canvas)
   ctx.fillRect(0,0,canvas.width/zoom,canvas.height/zoom);
   ctx.fill();
-  resizeCanvasToDisplaySize(canvas)
 
   //draw
   for (i=0;i<layers.length;i++){
@@ -252,77 +300,89 @@ function update(){
 
   if (mode=="Drag"){
     if (dragEnabled==false&&selectedLayer!=null){
-      //Drawing and checking of the resize Dots
+      //Drawing and checking if the resize Dots are being clicked by the mouse
       ctx.strokeStyle = "black";
-      ctx.fillStyle = "red";
-      ctx.lineWidth = "7"
-      for (i = 0; i < 4; i++) {
-        ctx.beginPath();
-        if (i == 0&&!layers[selectedLayer].background) {
-          //left
-          ctx.arc(layers[selectedLayer].x, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, 10, 0, 2 * Math.PI);
-          if (distance(layers[selectedLayer].x, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, mouseX, mouseY) < 10&&resizeEnabled==null) {
-            if (mouseDown) {
-              resizeEnabled="left"
-              firstX=mouseX
-              previousSize=layers[selectedLayer].obj.width
+      ctx.fillStyle = "white";
+      ctx.lineWidth = 7/zoom
+      for (i = 0; i < 4; i++) {          //since we want 4 dots, loop 4 times
+        if (!layers[selectedLayer].background){ //we dont want to show the dots when it is a background as they are considered locked and should not be resized
+          ctx.beginPath();
+          if (i == 0) {
+            //left
+            //draw left dot in correct location
+            ctx.arc(layers[selectedLayer].x, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, 10/zoom, 0, 2 * Math.PI);
+            //check if its being clicked
+            if (distance(layers[selectedLayer].x, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, mouseX, mouseY) < 10/zoom&&resizeEnabled==null) {
+              if (mouseDown) {
+                resizeEnabled="left"//it has been clicked so store this value for later on
+                firstX=mouseX//store this value so we know the original position of the mouse and can use this to calculate what the new width should be later.
+                previousSize=layers[selectedLayer].obj.width//store 
+              }
             }
           }
-        }
-        else if (i == 1&&!layers[selectedLayer].background) {
-          //right
-          ctx.arc(layers[selectedLayer].x + layers[selectedLayer].obj.width, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, 10, 0, 2 * Math.PI);
-          if (distance(layers[selectedLayer].x + layers[selectedLayer].obj.width, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, mouseX, mouseY) < 10&&resizeEnabled==null) {
-            if (mouseDown) {
-              resizeEnabled="right"
-              firstX=mouseX
-              previousSize=layers[selectedLayer].obj.width
+          else if (i == 1) {
+            //right
+            ctx.arc(layers[selectedLayer].x + layers[selectedLayer].obj.width, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, 10/zoom, 0, 2 * Math.PI);
+            if (distance(layers[selectedLayer].x + layers[selectedLayer].obj.width, (2 * layers[selectedLayer].y + layers[selectedLayer].obj.height) / 2, mouseX, mouseY) < 10/zoom&&resizeEnabled==null) {
+              if (mouseDown) {
+                resizeEnabled="right"
+                firstX=mouseX
+                previousSize=layers[selectedLayer].obj.width
+              }
             }
           }
-        }
-        else if (i == 2&&!layers[selectedLayer].background) {
-          //up
-          ctx.arc((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y, 10, 0, 2 * Math.PI);
-          if (distance((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y, mouseX, mouseY) < 10&&resizeEnabled==null) {
-            if (mouseDown) {
-              resizeEnabled="up"
-              firstY=mouseY
-              previousSize=layers[selectedLayer].obj.height
+          else if (i == 2) {
+            //up
+            ctx.arc((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y, 10/zoom, 0, 2 * Math.PI);
+            if (distance((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y, mouseX, mouseY) < 10/zoom&&resizeEnabled==null) {
+              if (mouseDown) {
+                resizeEnabled="up"
+                firstY=mouseY
+                previousSize=layers[selectedLayer].obj.height
+              }
             }
           }
-        }
-        else if (i == 3&&!layers[selectedLayer].background) {
-          //down
-          ctx.arc((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y + layers[selectedLayer].obj.height, 10, 0, 2 * Math.PI);
-          if (distance((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y + layers[selectedLayer].obj.height, mouseX, mouseY) < 10&&resizeEnabled==null) {
-            if (mouseDown) {
-              resizeEnabled="down"
-              firstY=mouseY
-              previousSize=layers[selectedLayer].obj.height
+          else if (i == 3) {
+            //down
+            ctx.arc((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y + layers[selectedLayer].obj.height, 10/zoom, 0, 2 * Math.PI);
+            if (distance((2 * layers[selectedLayer].x + layers[selectedLayer].obj.width) / 2, layers[selectedLayer].y + layers[selectedLayer].obj.height, mouseX, mouseY) < 10/zoom&&resizeEnabled==null) {
+              if (mouseDown) {
+                resizeEnabled="down"
+                firstY=mouseY
+                previousSize=layers[selectedLayer].obj.height
+              }
             }
           }
+          ctx.stroke();
+          ctx.fill();
+          ctx.closePath();
         }
-        ctx.stroke();
-        ctx.fill();
-        ctx.closePath();
       }
     }
-    if (resizeEnabled!=null){
+    if (resizeEnabled!=null){ //since there has been a resize change detected then start with the resize process
       if (mouseDown){
-        if (resizeEnabled=="left"){
-          layers[selectedLayer].obj.width=previousSize+firstX-mouseX
-          layers[selectedLayer].x=mouseX
+        if (resizeEnabled=="left"){ // apply left resize
+          layers[selectedLayer].obj.width=previousSize+firstX-mouseX //the new width is the old width plus the difference in mouse position, i.e. if the mouse has moved 20 px to the left then the shape will become 20 px wider
+          if (layers[selectedLayer].obj.width<0){// if they are trying to resize smaller than zero
+            layers[selectedLayer].obj.width=0}//limit it to zero
+          else{
+            layers[selectedLayer].x=mouseX}//otherwise set the new x to the old x, this is because canvas works from the top left being 0,0  just increasing the width without moving it left it doesnt produce the desired effect
         }
         if (resizeEnabled=="right"){
           layers[selectedLayer].obj.width=previousSize-firstX+mouseX
         }
         if (resizeEnabled=="up"){
           layers[selectedLayer].obj.height=previousSize+firstY-mouseY
-          layers[selectedLayer].y=mouseY
+          if (layers[selectedLayer].obj.height<0){
+            layers[selectedLayer].obj.height=0}
+          else{
+            layers[selectedLayer].y=mouseY}
         }
         if (resizeEnabled=="down"){
           layers[selectedLayer].obj.height=previousSize-firstY+mouseY
         }
+        if (layers[selectedLayer].obj.height<1){layers[selectedLayer].obj.height=1}
+        if (layers[selectedLayer].obj.width<1){layers[selectedLayer].obj.width=1}
       }
       else{
         resizeEnabled=null
@@ -331,17 +391,20 @@ function update(){
       }
     }
     else{
-      if (mouseDown){
+      if (mouseDown){//main series of moving the selected item by mouse
         if (selectedLayer==null){
           for(var i=0;i<layers.length;i++){
-            if (collide(layers[i].x,layers[i].y,layers[i].obj.width, layers[i].obj.height,mouseX,mouseY)){
+            if (layers[i].isTouchingMouse()){ //if the mouse is down and the mouse is over the layer, then
               selectedLayer=i;
+              document.getElementById("Opacity").value=layers[selectedLayer].opacity
+              document.getElementById("Colour").value=layers[selectedLayer].colour
+              document.getElementById("Dimensions").checked=layers[selectedLayer].showDimensions
             }
           }
         }
         else{
           if (dragEnabled==false){
-            if (collide(layers[selectedLayer].x,layers[selectedLayer].y,layers[selectedLayer].obj.width, layers[selectedLayer].obj.height,mouseX,mouseY)){
+            if (layers[selectedLayer].isTouchingMouse()){
               dragEnabled=true;
               offsetX=mouseX-layers[selectedLayer].x;
               offsetY=mouseY-layers[selectedLayer].y;
@@ -350,8 +413,11 @@ function update(){
               selectedLayer=null;
             }
             for(var i=layers.length-1;i>-1;i--){
-              if (collide(layers[i].x,layers[i].y,layers[i].obj.width, layers[i].obj.height,mouseX,mouseY)){
+              if (layers[i].isTouchingMouse()){
                 selectedLayer=i;
+                document.getElementById("Opacity").value=layers[selectedLayer].opacity
+                document.getElementById("Colour").value=layers[selectedLayer].colour
+                document.getElementById("Dimensions").checked=layers[selectedLayer].showDimensions
                 dragEnabled=true;
                 offsetX=mouseX-layers[selectedLayer].x;
                 offsetY=mouseY-layers[selectedLayer].y;
@@ -371,6 +437,42 @@ function update(){
         dragEnabled=false;
       }
     }
+    if (selectedLayer!=null){
+      document.getElementById("layerPosBox").hidden=false;
+    }else{
+      document.getElementById("layerPosBox").hidden=true;
+    }
+    if (selectedLayer!=null && layers[selectedLayer].type=="Rect"){
+      //things which should show on bar when it is operating on a rectangle
+      document.getElementById("opacityBox").hidden=false;
+      document.getElementById("colourSetter").hidden=false;
+      document.getElementById("dimensionsBox").hidden=false;
+      layers[selectedLayer].opacity=document.getElementById("Opacity").value;
+      layers[selectedLayer].colour=document.getElementById("Colour").value;
+      layers[selectedLayer].showDimensions=document.getElementById("Dimensions").checked;
+    }
+    else{
+      document.getElementById("opacityBox").hidden=true;
+      document.getElementById("colourSetter").hidden=true;
+      document.getElementById("dimensionsBox").hidden=true;
+    }
+    if (selectedLayer!=null && layers[selectedLayer].type=="Image"){
+      //things which should show on bar when it is operating on an image
+      document.getElementById("backgroundOptionsBox").hidden=false
+      layers[selectedLayer].background=(document.getElementById("Background").checked)
+
+      if (layers[selectedLayer].background){
+        document.getElementById("rotationBox").hidden=false
+        layers[selectedLayer].rotation=Number(document.getElementById("Rotation").value)
+      }else{
+        document.getElementById("rotationBox").hidden=true
+      }
+    }
+    else{
+      document.getElementById("backgroundOptionsBox").hidden=true
+      document.getElementById("rotationBox").hidden=true
+    }
+    
   }
   if (mode=="Move"){
     if (mouseDown){
@@ -416,7 +518,7 @@ function update(){
       else{
         scale=distance(firstX, firstY,mouseX,mouseY)/input
         scaleUnit=window.prompt("What units are these? i.e. Metres,Inches,CM")
-        document.getElementById('priceConversionText').innerHTML ="£/"+scaleUnit;
+        document.getElementById('priceConversionText').innerHTML ="£/"+scaleUnit+"²";
         scaleEnabled=false;
       }
     }
@@ -447,7 +549,7 @@ function update(){
       alert("Scale Not Set! Click scale to set!")
     }
   }
-  if (mode=="setRotation"){
+  if (mode=="setRotation"&&selectedLayer!=null){
     if (layers[selectedLayer].background){
       if (mouseDown){
         if(setRotationEnabled){

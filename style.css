@@ -5,49 +5,74 @@ body {
   font-family: Arial;
   text-align: center;
 }
-
 #container {
   display: flex;
   flex-direction: row;
 }
-
-button {
+.simpleButton {
   border: none;
   background-color: #535353;
   color: white;
   font-family: Arial;
+  width: 100%;
+  height: 100%;
 }
-button:hover {
+.simpleButton:hover {
   background-color: #454545;
 }
-
+.superButton{
+  border: none;
+  font-size:200%;
+  background-color: Transparent;
+}
+.superButton:hover {
+  animation-name:Glow;
+  animation-duration:1s;
+  animation-iteration-count: infinite;
+  animation-direction:alternate;
+}
+@keyframes Glow {
+  from {text-shadow:none;}
+  to {text-shadow:white 0px 0 30px;}
+}
 #tools {
   height: 100vh;
   background-color: #535353;
   display: flex;
   flex-direction: column;
 }
-
 canvas{
   height: 100%;
   width: 100%;
 }
-
 #work-area {
   display: flex;
   height: 100vh;
   width: 100vw;
   flex-direction:column;
 }
-
 #layersArea{
+  text-align: center;
   height: 100vh;
   width:10%;
   display: flex;
   flex-direction:column;
   background-color: #535353;
+  padding:20px;
 }
-
-#priceConversionBox{
-  padding: 10px;
+.layerSection{
+  padding-top: 30px;
+}
+#widthBox{
+  padding-top: 30px;
+  padding-bottom:20px;
+}
+#lengthBox{
+  padding-bottom:30px;
+}
+.numberInput{
+  background-color:transparent;
+  border-color: white;
+  border-style: solid;
+  width:50px;
 }

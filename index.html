@@ -15,35 +15,61 @@
         <p id="indicator">Select</p>
       </div>
       <input id="inputFile" type="file" onchange="upload();" hidden/>
-      <button onclick="document.getElementById('inputFile').click();">Upload</button>
-      <button onclick="changeMode('Drag')">Drag</button>
-      <button onclick="changeMode('Move')">Move</button>
-      <button onclick="newRect()">Shape</button>
-      <button onclick="changeMode('Scale')">Set Scale</button>
-      <button onclick="changeMode('Measure')">Measure</button>
-      <button onclick="changeLayer(1)">Layer Up</button>
-      <button onclick="changeLayer(-1)">Layer Down</button>
-      <button onclick="layerRemove(selectedLayer)">Remove Layer</button>
-      <button onclick="deselect()">Deselect</button>
-      <button onclick="changeMode('setRotation')">set Rotation</button>
-      <button onclick="toggleDimensions(selectedLayer)">Toggle Dimensions</button>
-      <button onclick="toggleBackground(selectedLayer)">Toggle Background</button>
-      <button onclick="">Choose Color</button>
-      <button onclick="changeZoom(2)">+</button>
-      <button onclick="changeZoom(0.5)">-</button>
-      <button onclick="saveFile()">Save</button>
+      <button class="simpleButton" onclick="document.getElementById('inputFile').click();">Upload</button>
+      <button class="simpleButton" onclick="changeMode('Drag')">Drag</button>
+      <button class="simpleButton" onclick="changeMode('Move')">Move</button>
+      <button class="simpleButton" onclick="newRect()">Shape</button>
+      <button class="simpleButton" onclick="changeMode('Scale')">Set Scale</button>
+      <button class="simpleButton" onclick="changeMode('Measure')">Measure</button>
+      <button class="simpleButton" onclick="changeZoom(2)">+</button>
+      <button class="simpleButton" onclick="changeZoom(0.5)">-</button>
+      <button class="simpleButton" onclick="console.log(save())">Save</button>
     </div>
+
+
     <div id="work-area">
       <canvas id="canvas"></canvas>
     </div>
+
+
     <div id="layersArea">
       <div id="areaBox">
         <p id="totalArea"></p>
       </div>
-      <div id=priceConversionBox>
+
+
+      <div class="layerSection" id=priceConversionBox>
         <p id=priceConversionText></p>
-        <input id=priceConversion type="text">
+        <input id="priceConversion" type="number">
+        <p id="priceConversionTotal"></p>
       </div>
+
+      <div class="layerSection" id="opacityBox">
+        <label>Opacity<input id="Opacity" value=100 type="range"></label>
+      </div>
+      <div class="layerSection" id="dimensionsBox">
+        <label>Show Dimensions  <input id="Dimensions" type="checkbox"></label>
+      </div>
+
+      <div class="layerSection" id="colourSetter">
+        <label>Colour   <input id="Colour" type="color"></label>
+      </div>
+
+      <div class="layerSection" id="backgroundOptionsBox">
+        <label>Background    <input id="Background" type="checkbox"></label>
+      </div>
+
+      <div class="layerSection" id = "rotationBox">
+        <label>Rotation<input id="Rotation" type="range" max="360" min="-360" step="0.5"></label>
+      </div>
+
+      <div class="layerSection" id="layerPosBox">
+        <button class="superButton" id="layerUp" onclick="changeLayer(1)">🔺</button>
+        <button class="superButton" id="layerDown" onclick="changeLayer(-1)">🔻</button>
+        <button class="superButton" id="layerDelete" onclick="layers.splice(selectedLayer,1);selectedLayer=null;">🗑️</button>
+        <button class="superButton" id="layerCopy" onclick="duplicateLayer(layers[selectedLayer])">➕</button>
+      </div>
+
     </div>
   </div>
 </body>
