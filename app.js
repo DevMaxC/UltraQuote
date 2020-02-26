@@ -216,8 +216,8 @@ class Button extends Component {
     var newElement = document.createElement("button")
 
     newElement.innerHTML = this.label
-    newElement.id=this.elementId
-    newElement.setAttribute("onclick",this.onclick)
+    newElement.id = this.elementId
+    newElement.addEventListener("click", this.onclick());
 
     document.getElementById(this.locatorId).appendChild(newElement)
   }
