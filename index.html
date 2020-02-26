@@ -24,6 +24,8 @@
       <button class="simpleButton" onclick="changeZoom(2)">+</button>
       <button class="simpleButton" onclick="changeZoom(0.5)">-</button>
       <button class="simpleButton" onclick="console.log(save())">Save</button>
+      <input id="loadFile" type="file" onchange="upload();" hidden/>
+      <button class="simpleButton" onclick="document.getElementById('loadFile').click();">load</button>
     </div>
 
 
@@ -40,7 +42,7 @@
 
       <div class="layerSection" id=priceConversionBox>
         <p id=priceConversionText></p>
-        <input id="priceConversion" type="number">
+        <input id="priceConversion" max=10000 type="number">
         <p id="priceConversionTotal"></p>
       </div>
 
@@ -52,7 +54,8 @@
       </div>
 
       <div class="layerSection" id="colourSetter">
-        <label>Colour   <input id="Colour" type="color"></label>
+        <input id="Colour" type="color" hidden>
+        <button class="superButton" id="ColourEmoji" onclick="document.getElementById('Colour').click()">🎨</button>
       </div>
 
       <div class="layerSection" id="backgroundOptionsBox">
@@ -68,6 +71,7 @@
         <button class="superButton" id="layerDown" onclick="changeLayer(-1)">🔻</button>
         <button class="superButton" id="layerDelete" onclick="layers.splice(selectedLayer,1);selectedLayer=null;">🗑️</button>
         <button class="superButton" id="layerCopy" onclick="duplicateLayer(layers[selectedLayer])">➕</button>
+        <button class="superButton" id="layerCopy" onclick="layers=[];selectedLayer=null;">💣</button>
       </div>
 
     </div>

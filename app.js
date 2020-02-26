@@ -17,7 +17,6 @@ var moveEnabled= false;
 var resizeEnabled = false;
 var setRotationEnabled= false;
 var previousSize
-var points=[];
 var firstX;
 var firstY;
 var firstRotation;
@@ -98,6 +97,15 @@ function resizeCanvasToDisplaySize(canvas) {
 }
 ///END
 
+function binToStr(binText) {
+  bintext.split(" ")
+  var newText=""
+  for (i=0; i<binText.length; i++) {
+    newText+=chr(bintext[i])
+  }
+
+}
+
 function save(){
   savetext=""
   for (i=0;i<layers.length;i++){
@@ -120,29 +128,98 @@ function load(savetext){
   for (i=0;i<loadtext.length;i++){
     var properties=loadtext[i].split(" ")
 
-    //turning the string back into the data type it should be
+    //turning each property back into the data type it should be
 
-    properties[7]=Number(properties[7])//width
-    properties[8]=Number(properties[8])//height
     properties[1]=Number(properties[1])//x
     properties[2]=Number(properties[2])//y
-    properties[5]=Number(properties[5])//rotation
-    properties[10]=Number(properties[10])//opacity
-
     properties[3]=(properties[3]==true)//showDimensions
     properties[4]=(properties[4]==true)//background
-
+    properties[5]=Number(properties[5])//rotation
+    properties[6]=Number(properties[6])//colour
+    properties[8]=Number(properties[8])//width
+    properties[9]=Number(properties[9])//height
 
     // recreating each layer and adding it back into the array of layers
     if (properties[0]=="Rect"){
-      layers.push(new Layer({width:properties[7],height:properties[8]},properties[0],x=properties[1],y=properties[2],showDimensions=properties[3],rotation=properties[5],color=properties[6],opacity=properties[10],background=properties[4]))
+      layers.push(new Layer({width:properties[8],height:properties[9]},properties[0],x=properties[1],y=properties[2],showDimensions=properties[3],rotation=properties[5],opacity=properties[6],colour=properties[7],background=properties[4]))
     }else if (properties[0]=="Image"){
       var img=new Image(); //constructs an image type and sets the individual properties.
-      img.src=properties[9] 
-      img.width=properties[7]
-      img.height=properties[8]
-      layers.push(new Layer(img,properties[0],x=properties[1],y=properties[2],showDimensions=properties[3],rotation=properties[5],color=properties[6],opacity=properties[10],background=properties[4]))
+      img.src=properties[10] 
+      img.width=properties[8]
+      img.height=properties[9]
+      layers.push(new Layer(img,properties[0],x=properties[1],y=properties[2],showDimensions=properties[3],rotation=properties[5],opacity=properties[6],color=properties[7],background=properties[4]))
     }
+  }
+}
+
+function loadFile(){
+
+}
+
+class Component {
+  constructor(name,locatorId,elementId,label){
+    this.name=name; //Name of the component
+    this.locatorId = locatorId; //Locator of where it should be put
+    this.elementId = elementId; //Id which will be put into the element
+    this.label = label //Label which will be displayed to the user
+    this.hidden=true; //tracks if its hidden
+  }
+
+  hide(){
+    if (!this.hidden){
+      this.hidden=true;
+      document.getElementById(this.elementId).remove();
+    }
+  }
+
+  isHidden= () => this.hidden;
+}
+
+class Slider extends Component {
+  constructor(name,locatorId,elementId,label,min,max,step,value){
+    super(name,locatorId,elementId,label)
+
+    this.min = min
+    this.max = max
+    this.step = step
+    this.value = value
+  }
+
+  show(){
+    this.hidden = false;
+    var sliderElement = document.createElement("Input")
+    var newElement = document.createElement("label")
+
+    sliderElement.type="range"
+    sliderElement.max=this.max
+    sliderElement.min=this.min
+    sliderElement.step=this.step
+
+    newElement.name=this.name
+    newElement.id=this.elementId
+    newElement.innerHTML = this.label
+    newElement.appendChild(sliderElement)
+
+    document.getElementById(this.locatorId).appendChild(newElement)
+  }
+
+  value = () => this.value
+}
+
+class Button extends Component {
+  constructor(name,locatorId,elementId,label,onclick){
+    super(name,locatorId,elementId,label)
+    this.onclick=onclick
+  }
+  show(){
+    this.hidden = false;
+    var newElement = document.createElement("button")
+
+    newElement.innerHTML = this.label
+    newElement.id=this.elementId
+    newElement.setAttribute("onclick",this.onclick)
+
+    document.getElementById(this.locatorId).appendChild(newElement)
   }
 }
 
@@ -208,7 +285,14 @@ class Layer {
   }
 
   toText(){
-    return this.type+" "+this.x+" "+this.y+" "+this.showDimensions+" "+this.background+" "+this.rotation+" "+this.opacity+" "+this.obj.width+" "+this.obj.height+" "+this.obj.src+" "+this.colour //turns the properties of the layer to a string so that it can be saved
+    return this.type+" "+this.x+" "+this.y+" "+this.showDimensions+" "+this.background+" "+this.rotation+" "+this.opacity+" "+this.colour+" "+this.obj.width+" "+this.obj.height+" "+this.obj.src //turns the properties of the layer to a string so that it can be saved
+  }
+
+  setPostition(x,y){
+    if (!isNaN(x) || !isNaN(y)){
+      this.x=x
+      this.y=y
+    }
   }
 };
 
@@ -221,7 +305,7 @@ function layerRemove(index) {
 };
 
 function distance(x1,y1,x2,y2){
-  return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))
+  return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)) //uses multiplication instead of math.pow as it is faster according to https://i.stack.imgur.com/AjRF6.jpg
 };
 
 function upload(){
@@ -399,6 +483,7 @@ function update(){
               document.getElementById("Opacity").value=layers[selectedLayer].opacity
               document.getElementById("Colour").value=layers[selectedLayer].colour
               document.getElementById("Dimensions").checked=layers[selectedLayer].showDimensions
+              document.getElementById("Background").checked=layers[selectedLayer].background
             }
           }
         }
@@ -418,6 +503,7 @@ function update(){
                 document.getElementById("Opacity").value=layers[selectedLayer].opacity
                 document.getElementById("Colour").value=layers[selectedLayer].colour
                 document.getElementById("Dimensions").checked=layers[selectedLayer].showDimensions
+                document.getElementById("Background").checked=layers[selectedLayer].background
                 dragEnabled=true;
                 offsetX=mouseX-layers[selectedLayer].x;
                 offsetY=mouseY-layers[selectedLayer].y;
@@ -427,8 +513,7 @@ function update(){
           }
           else{
             if(!layers[selectedLayer].background){
-              layers[selectedLayer].x=mouseX-offsetX;
-              layers[selectedLayer].y=mouseY-offsetY;
+              layers[selectedLayer].setPostition(mouseX-offsetX,mouseY-offsetY);
             }
           }
         }
@@ -547,28 +632,6 @@ function update(){
     }
     else{
       alert("Scale Not Set! Click scale to set!")
-    }
-  }
-  if (mode=="setRotation"&&selectedLayer!=null){
-    if (layers[selectedLayer].background){
-      if (mouseDown){
-        if(setRotationEnabled){
-          layers[selectedLayer].rotation=firstRotation+(mouseX-firstX)*360/canvas.width
-          ctx.beginPath();
-          ctx.moveTo(firstX,firstY);
-          ctx.lineTo(mouseX,firstY);
-          ctx.strokeStyle="red";
-          ctx.linewidth=20;
-          ctx.stroke();
-          ctx.closePath();
-        }
-      }
-      else{
-        setRotationEnabled=true
-        firstRotation=layers[selectedLayer].rotation
-        firstX=mouseX
-        firstY=mouseY
-      }
     }
   }
 };
