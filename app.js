@@ -217,14 +217,14 @@ class Button extends Component {
 
     newElement.innerHTML = this.label
     newElement.id = this.elementId
-    newElement.addEventListener("click", this.onclick());
+    newElement.addEventListener("click",this.onclick);
 
     document.getElementById(this.locatorId).appendChild(newElement)
   }
 }
 
 class Layer {
-  constructor(obj,type, x = (canvas.width - obj.width) / 2, y = (canvas.height - obj.height) / 2, showDimensions = false, rotation = 0,opacity = 100, colour = "#008000", background = false){
+  constructor(type, x = (canvas.width - obj.width) / 2, y = (canvas.height - obj.height) / 2, showDimensions = false, rotation = 0,opacity = 100, colour = "#008000", background = false){
     this.obj=obj;
     this.type=type;
     this.x=x;
@@ -235,40 +235,24 @@ class Layer {
     this.opacity=opacity;
     this.colour=colour;
   }
-  draw(i){
-    ctx.save();
-    ctx.globalAlpha=this.opacity/100;
-    if (this.background==true) {
-      //detected as a background
-      ctx.translate((this.x*2+this.obj.width)/2,(this.y*2+this.obj.height)/2); //translates to the center of the image so that in rotation we are rotating around the center rather than from 0,0
-      ctx.rotate(this.rotation* Math.PI / 180); //applies the rotation
-      ctx.drawImage(this.obj,-1*this.obj.width/2,-1*this.obj.height/2,this.obj.width,this.obj.height); //draws the image in the correct position, shifted based on where the canvas translated to
-    }
-    else if (this.type =="Rect") {
-      //detected as a rect
-      ctx.fillStyle=this.colour;
-      ctx.fillRect(this.x,this.y,this.obj.width,this.obj.height);
-    }
-    else if (this.type=="Image"){
-      //detected as a image
-      ctx.drawImage(this.obj, this.x, this.y, this.obj.width, this.obj.height);
-      }
-    if (selectedLayer == i && !this.background) {
-      //draw box around selected object
-      ctx.beginPath();
-      ctx.globalAlpha=1;
-      ctx.linejoin='miter';
-      ctx.lineWidth =3/zoom;
-      ctx.rect(this.x, this.y, this.obj.width, this.obj.height);
-      ctx.strokeStyle="White"
-      ctx.stroke();
-    }
-    if (this.showDimensions) {
-      ctx.font = (this.obj.width / 12 + "px sans-serif") //sets the font size to an appropriate size to fit in the box horizontally.
-      ctx.fillStyle = "Black";
-      ctx.textAlign = "center";
-      ctx.fillText((this.obj.width / scale).toFixed(2) + " x " + (this.obj.height / scale).toFixed(2) + " " + scaleUnit, (this.obj.width + 2 * this.x) / 2, (this.obj.height + 2 * this.y) / 2) //only shows the size to 2 decimat places
-    }
+
+  drawOuterBox(){
+    ctx.save()
+    ctx.beginPath();
+    ctx.globalAlpha=1;
+    ctx.lineWidth =3/zoom;
+    ctx.rect(this.x, this.y, this.obj.width, this.obj.height);
+    ctx.strokeStyle="White"
+    ctx.stroke();
+    ctx.restore()
+  }
+
+  drawDimensions(){
+    ctx.save()
+    ctx.font = (this.obj.width / 12 + "px sans-serif") //sets the font size to an appropriate size to fit in the box horizontally.
+    ctx.fillStyle = "Black";
+    ctx.textAlign = "center";
+    ctx.fillText((this.obj.width / scale).toFixed(2) + " x " + (this.obj.height / scale).toFixed(2) + " " + scaleUnit, (this.obj.width + 2 * this.x) / 2, (this.obj.height + 2 * this.y) / 2) //only shows the size to 2 decimat places
     ctx.restore()
   }
 
@@ -289,12 +273,37 @@ class Layer {
   }
 
   setPostition(x,y){
-    if (!isNaN(x) || !isNaN(y)){
-      this.x=x
-      this.y=y
-    }
+    this.x=x;
+    this.y=y;
   }
 };
+
+class myImage extends Layer {
+  constructor(obj,type, x,y,showDimensions,rotation,opacity,colour,background) {
+    super(type,x,y,showDimensions,rotation,opacity,colour,background)
+    this.obj=obj
+  }
+  draw() {
+    ctx.save()
+    ctx.rotate(this.rotation)
+    ctx.drawImage(this.obj, this.x, this.y, this.obj.width, this.obj.height);
+    ctx.restore()
+  }
+}
+
+class Rectangle extends Layer {
+  constructor(obj,type, x,y,showDimensions,rotation,opacity,colour,background) {
+    super(type,x,y,showDimensions,rotation,opacity,colour,background)
+    this.obj = obj
+  }
+  draw() {
+    ctx.save();
+    ctx.globalAlpha=this.opacity/100;
+    ctx.fillStyle=this.colour;
+    ctx.fillRect(this.x,this.y,this.obj.width,this.obj.height);
+    ctx.restore()
+  }
+}
 
 function layerRemove(index) {
   //removes a layer
@@ -317,7 +326,7 @@ function upload(){
   reader.readAsDataURL(document.getElementById("inputFile").files[0]);
   document.getElementById("inputFile").value = "";
   img.onload = function(e) {
-    layers.push(new Layer(img,"Image"))
+    layers.push(new myImage(img,"Image"))
     selectedLayer=layers.length-1;
   }
 };
@@ -341,7 +350,7 @@ function newRect(height=100,width=100){
   }
   //creates an object containing the width and height of the rectangle, this is similar to the image object so we can reuse lots of code.
   obj={height:height,width:width}
-  layers.push(new Layer(obj,"Rect"));
+  layers.push(new Rectangle(obj,"Rect"));
   selectedLayer=layers.length-1;//sets the selected layer to the layer that has just been created. so the new rectangle is selected.
 };
 
@@ -355,14 +364,14 @@ function calculateTotalGrassArea(){
 
 function duplicateLayer(targetLayer){
   if (targetLayer.type=="Rect"){
-    layers.push(new Layer({width:targetLayer.obj.width, height:targetLayer.obj.height},targetLayer.type,targetLayer.x,targetLayer.y,targetLayer.showDimensions,targetLayer.rotation,targetLayer.opacity,targetLayer.colour,targetLayer.background))
+    layers.push(new Rectangle({width:targetLayer.obj.width, height:targetLayer.obj.height},targetLayer.type,targetLayer.x,targetLayer.y,targetLayer.showDimensions,targetLayer.rotation,targetLayer.opacity,targetLayer.colour,targetLayer.background))
   }
   else if (targetLayer.type=="Image"){
     var img = new Image()
     img.width=targetLayer.obj.width
     img.height=targetLayer.obj.height
     img.src=targetLayer.obj.src
-    layers.push(new Layer(img,targetLayer.type,targetLayer.x,targetLayer.y,targetLayer.showDimensions,targetLayer.rotation,targetLayer.opacity,targetLayer.colour,targetLayer.background))
+    layers.push(new myImage(img,targetLayer.type,targetLayer.x,targetLayer.y,targetLayer.showDimensions,targetLayer.rotation,targetLayer.opacity,targetLayer.colour,targetLayer.background))
   }
 };
 
@@ -380,6 +389,12 @@ function update(){
   //draw
   for (i=0;i<layers.length;i++){
       layers[i].draw(i)
+      if (layers[i].showDimensions){
+        layers[i].drawDimensions();
+      }
+  }
+  if (selectedLayer!=null){
+    layers[selectedLayer].drawOuterBox()
   }
 
   if (mode=="Drag"){
@@ -635,4 +650,6 @@ function update(){
     }
   }
 };
+
+
 setInterval(update,0)
