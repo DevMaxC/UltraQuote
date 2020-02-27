@@ -8,6 +8,7 @@ var scaleUnit="Px";
 
 document.getElementById('priceConversionText').innerHTML ="£/"+scaleUnit+"²";
 
+var uiElements=[];
 var layers = [];
 var selectedLayer= null;
 var scaleEnabled=false;
@@ -15,11 +16,9 @@ var measureEnabled=false;
 var dragEnabled=false;
 var moveEnabled= false;
 var resizeEnabled = false;
-var setRotationEnabled= false;
 var previousSize
 var firstX;
 var firstY;
-var firstRotation;
 //canvas.height = 1001;
 //canvas.width = 1001;
 zoom=1;
@@ -66,9 +65,6 @@ function changeZoom(multiplier) {
 
 function changeMode(newMode){
   mode=newMode;
-  if (newMode!="setRotation"){
-    selectedLayer=null;
-  }
   if (newMode=="Measure"||newMode=="Scale"){
     canvas.style.cursor="crosshair"
   }
@@ -650,6 +646,5 @@ function update(){
     }
   }
 };
-
 
 setInterval(update,0)
