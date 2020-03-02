@@ -4,10 +4,23 @@ function save(layerList) {
         savetext += "@"; //adds a seperator to save text so that layers can be distinguished and seperated
         savetext += layerList[i].toText() //gets the text version of the layer and adds it to the save text
     }
-    download("myFile.uq", savetext)
+    var myBlob = new Blob([savetext])
+    saveData(myBlob,"myFile.uq")
 }
 
-function load(savenums) {
+function saveData(blob, fileName) 
+{
+    var ultraQuoteFile = document.createElement("ultraQuoteFile"); //creates new Element
+    document.body.appendChild(ultraQuoteFile); //puts this element on the page
+    ultraQuoteFile.style = "display: none"; //makes sure the user cant see it
+    var url = window.URL.createObjectURL(blob); //creates a file url for the blob input
+    ultraQuoteFile.href = url; //sets the href of the element to this file url
+    ultraQuoteFile.download = fileName; //sets the download name to the filename
+    ultraQuoteFile.click(); //clicks the element to start the download
+    window.URL.revokeObjectURL(url); //stops the window from downloading copies of the file
+}
+
+function load(savetext) {
     var layers = [] //removes all layers before the load.
 
     //splits the combined string into individual layers in string format
@@ -46,6 +59,3 @@ function load(savenums) {
     }
 }
 
-function loadFile() {
-
-}
