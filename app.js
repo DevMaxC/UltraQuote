@@ -105,20 +105,6 @@ function distance(x1, y1, x2, y2) {
   return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) //uses multiplication instead of math.pow as it is faster according to https://i.stack.imgur.com/AjRF6.jpg
 };
 
-function upload() {
-  var reader = new FileReader(); //creates a file reader object
-  img = new Image(); //creates an image object
-  reader.onload = function (e) {
-    img.src = e.target.result; //creates an src
-  };
-  reader.readAsDataURL(document.getElementById("inputFile").files[0]);
-  document.getElementById("inputFile").value = "";
-  img.onload = function (e) {
-    layers.push(new myImage(img, "Image"))
-    selectedLayer = layers.length - 1;
-  }
-};
-
 function changeLayer(diff) {
   if (selectedLayer + diff >= 0 && selectedLayer + diff < layers.length) {
     var layer = layers[selectedLayer];

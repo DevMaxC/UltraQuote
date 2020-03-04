@@ -8,20 +8,31 @@ function save(layerList) {
     saveData(myBlob,"myFile.uq")
 }
 
-function saveData(blob, fileName) 
-{
-    var ultraQuoteFile = document.createElement("ultraQuoteFile"); //creates new Element
-    document.body.appendChild(ultraQuoteFile); //puts this element on the page
-    ultraQuoteFile.style = "display: none"; //makes sure the user cant see it
-    var url = window.URL.createObjectURL(blob); //creates a file url for the blob input
-    ultraQuoteFile.href = url; //sets the href of the element to this file url
-    ultraQuoteFile.download = fileName; //sets the download name to the filename
-    ultraQuoteFile.click(); //clicks the element to start the download
-    window.URL.revokeObjectURL(url); //stops the window from downloading copies of the file
+function saveData(blob, fileName) {
+    var a = document.createElement("a"); //creates new hyperlink element
+    document.body.appendChild(a); //puts this element on the page
+    a.style = "display:none"; //makes sure the user cant see it
+    var link = window.URL.createObjectURL(blob); //creates a file url for the blob input
+    a.download = fileName; //sets the download name to the filename
+    a.href = link; //sets the href of the element to this file url
+    a.click(); //clicks the element to start the download
 }
 
+function upload() {
+    var reader = new FileReader(); //creates a file reader object
+    img = new Image(); //creates an image object
+    reader.onload = function (e) {
+      img.src = e.target.result; //creates an src
+    };
+    reader.readAsDataURL(document.getElementById("inputFile").files[0]);
+    document.getElementById("inputFile").value = "";
+    img.onload = function (e) {
+      layers.push(new myImage(img, "Image"))
+      selectedLayer = layers.length - 1;
+    }
+  };
+
 function load(savetext) {
-    var layers = [] //removes all layers before the load.
 
     //splits the combined string into individual layers in string format
 
@@ -45,7 +56,7 @@ function load(savetext) {
 
         // recreating each layer and adding it back into the array of layers
         if (properties[0] == "Rect") {
-            layers.push(new Layer({
+            layers.push(new Rectangle({
                 width: properties[8],
                 height: properties[9]
             }, properties[0], x = properties[1], y = properties[2], showDimensions = properties[3], rotation = properties[5], opacity = properties[6], colour = properties[7], background = properties[4]))
@@ -54,8 +65,18 @@ function load(savetext) {
             img.src = properties[10]
             img.width = properties[8]
             img.height = properties[9]
-            layers.push(new Layer(img, properties[0], x = properties[1], y = properties[2], showDimensions = properties[3], rotation = properties[5], opacity = properties[6], color = properties[7], background = properties[4]))
+            layers.push(new myImage(img, properties[0], x = properties[1], y = properties[2], showDimensions = properties[3], rotation = properties[5], opacity = properties[6], color = properties[7], background = properties[4]))
         }
     }
 }
 
+function fullLoad(){
+    var reader = new FileReader(); //creates a file reader object
+    reader.onload = function (e) {
+       load(e.target.result); //creates an src
+    };
+    layers=[]
+    selectedLayer=null;
+    reader.readAsText(document.getElementById("loadFile").files[0]);
+    document.getElementById("loadFile").value = "";
+}
