@@ -19,8 +19,6 @@ var resizeEnabled = null;
 var previousSize
 var firstX;
 var firstY;
-//canvas.height = 1001;
-//canvas.width = 1001;
 zoom = 1;
 
 var keysdown = [];
@@ -76,22 +74,17 @@ function changeMode(newMode) {
   }
 };
 
-/// BEGIN   CODE ADAPTED FROM https://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5/43364730 BY GMAN
-function resizeCanvasToDisplaySize(canvas) {
+function resizeCanvas(canvas) {
   // look up the size the canvas is being displayed
-  const width = canvas.clientWidth;
-  const height = canvas.clientHeight;
-  // If it's resolution does not match change it
-  if (canvas.width !== width || canvas.height !== height) {
+  var width = canvas.clientWidth;
+  var height = canvas.clientHeight;
+  // If its resolution does not match then change it
+  if (width !== canvas.width || height !== canvas.height) {
+    ctx.scale(zoom, zoom) //adjust scale to ensure view stays correct.
     canvas.width = width;
     canvas.height = height;
-    ctx.scale(zoom, zoom)
-    return true;
   }
-
-  return false;
 }
-///END
 
 function layerRemove(index) {
   //removes a layer
@@ -163,7 +156,7 @@ function update() {
 
   ctx.strokeStyle = "Black";
   ctx.fillStyle = "#323232";
-  resizeCanvasToDisplaySize(canvas)
+  resizeCanvas(canvas)
   ctx.fillRect(0, 0, canvas.width / zoom, canvas.height / zoom);
   ctx.fill();
 
