@@ -30,7 +30,7 @@ function upload() {
       layers.push(new myImage(img, "Image"))
       selectedLayer = layers.length - 1;
     }
-  };
+};
 
 function load(savetext) {
 
