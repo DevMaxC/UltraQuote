@@ -3,10 +3,10 @@
 <head>
   <title>UltraQuote</title>
   <link rel="icon" href="logo.png">
-  <script src="app.js" defer></script>
   <script src="fileHandler.js" defer></script>
   <script src="layer.js" defer></script>
   <script src="ui.js" defer></script>
+  <script src="app.js" defer></script>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -48,36 +48,19 @@
         <p id="priceConversionTotal"></p>
       </div>
 
-      
+      <div class="layerSection" id="opacityBox"></div>
 
-      <div class="layerSection" id="opacityBox">
-        <label>Opacity<input id="Opacity" value=100 type="range"></label>
-      </div>
-      <div class="layerSection" id="dimensionsBox">
-        <label>Show Dimensions <input id="Dimensions" type="checkbox"></label>
-      </div>
+      <div class="layerSection" id="dimensionsBox"></div>
 
       <div class="layerSection" id="colourSetter">
         <input id="Colour" type="color" hidden>
-        <button class="superButton" id="ColourEmoji" onclick="document.getElementById('Colour').click()">🎨</button>
       </div>
 
-      <div class="layerSection" id="backgroundOptionsBox">
-        <label>Background <input id="Background" type="checkbox"></label>
-      </div>
+      <div class="layerSection" id="backgroundOptionsBox"> </div>
 
-      <div class="layerSection" id="rotationBox">
-        <label>Rotation<input id="Rotation" type="range" max="360" min="-360" step="0.5"></label>
-      </div>
+      <div class="layerSection" id="rotationBox"></div>
 
-      <div class="layerSection" id="layerPosBox">
-        <button class="superButton" id="layerUp" onclick="changeLayer(1)">🔺</button>
-        <button class="superButton" id="layerDown" onclick="changeLayer(-1)">🔻</button>
-        <button class="superButton" id="layerDelete"
-          onclick="layers.splice(selectedLayer,1);selectedLayer=null;">🗑️</button>
-        <button class="superButton" id="layerCopy" onclick="duplicateLayer(layers[selectedLayer])">➕</button>
-        <button class="superButton" id="layerCopy" onclick="layers=[];selectedLayer=null;">💣</button>
-      </div>
+      <div class="layerSection" id="layerPosBox"></div>
 
     </div>
   </div>

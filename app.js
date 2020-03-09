@@ -11,7 +11,7 @@ document.getElementById('priceConversionText').innerHTML = "£/" + scaleUnit + "
 var layers = []; //all the layer objects are put into this array
 var selectedLayer = null; // tracks which layer is selected
 var scaleEnabled = false; // holds a scaling drag is currently ongoing so that it can properly draw a line
-var measureEnabled = false; // Holds if the user has started a measurment so that lines can be drawn properly
+var measureEnabled = false; // Holds if the user has started a measurement so that lines can be drawn properly
 var dragEnabled = false; // Holds if the user is currently dragging
 var moveEnabled = false; // Holds if the user is dragging the whole screen
 var resizeEnabled = null; // Holds which direction the user is scaling the selectedLayer
@@ -21,7 +21,24 @@ var firstX; // holds the first x coordinate of mouse so that lines can be drawn
 var firstY; // holds the first y coordinate of mouse so that lines can be drawn
 var zoom = 1; // the zoom level of the canvas, useful for translating mouse position to a zoomed canvas
 
-var mouse={mouseDown:false, x:0,y:0}; // holds the information about the mouse, so that all function can see it
+var mouse = {
+  mouseDown: false,
+  x: 0,
+  y: 0
+}; // holds the information about the mouse, so that all function can see it
+
+//creates the visual elements on the screen
+var UiElements = [new Slider("Opacity", "opacityBox", "Opacity", "Opacity", 0, 100, 1).show(), new checkBox("Dimensions", "dimensionsBox", "Dimensions", "Show Dimensions").show(), new Button("Colour", "colourSetter", "ColourButton", "🎨", function () {
+  document.getElementById('Colour').click()
+}).show(), new checkBox("background", "backgroundOptionsBox", "Background", "Background").show(), new Slider("Rotation", "rotationBox", "Rotation", "Rotation", -360, 360, 1).show(), new Button("LayerUp", "layerPosBox", "layerUp", "🔺").show(), new Button("LayerDown", "layerPosBox", "layerDown", "🔻").show(), new Button("Trash", "layerPosBox", "TrashCan", "🗑️", function () {
+  layers.splice(selectedLayer, 1);
+  selectedLayer = null;
+}).show(), new Button("Duplicate", "layerPosBox", "Dupe", "➕", function () {
+  duplicateLayer(layers[selectedLayer])
+}).show(), new Button("Clear", "layerPosBox", "ClearButton", "💣", function () {
+  layers = [];
+  selectedLayer = null;
+}).show()]
 
 
 canvas.addEventListener('mousemove', function (event) {

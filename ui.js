@@ -101,7 +101,7 @@ class checkBox extends Component {
         newElement.name = this.name
         newElement.id = this.elementId
         newElement.innerHTML = this.label
-        newElement.appendChild(sliderElement)
+        newElement.appendChild(inputElement)
 
         document.getElementById(this.locatorId).appendChild(newElement)
     }
